@@ -1,8 +1,8 @@
-variable "name" {
+variable "node_name" {
   type = string
 }
 
-variable "node" {
+variable "hostname" {
   type = string
 }
 
@@ -25,3 +25,8 @@ variable "storage" {
   type    = string
   default = "local"
 }
+
+variable "disk_size" { type = string }
+variable "ip" { type = string }
+variable "gateway" { type = string }
+variable "password" { type = string }

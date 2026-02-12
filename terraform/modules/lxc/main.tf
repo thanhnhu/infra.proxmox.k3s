@@ -1,5 +1,5 @@
 resource "proxmox_lxc" "lxc" {
-  target_node  = var.node
+  target_node  = var.node_name
   hostname     = var.hostname
   ostemplate   = var.template
   #ostemplate   = "local:vztmpl/debian-12-standard_12.0-1_amd64.tar.zst"

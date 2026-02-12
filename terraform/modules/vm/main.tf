@@ -1,6 +1,6 @@
 resource "proxmox_vm_qemu" "vm" {
-  name        = var.name
   target_node = var.node
+  name        = var.name
   clone       = var.template
 
   cores  = var.cores
