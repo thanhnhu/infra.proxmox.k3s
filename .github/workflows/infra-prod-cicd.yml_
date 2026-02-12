@@ -3,7 +3,7 @@ name: Terraform Prod
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'terraform/**'
 
