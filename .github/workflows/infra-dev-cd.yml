@@ -17,10 +17,15 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        
+      - name: Clean Terraform
+        run: |
+          rm -rf .terraform
+          rm -f .terraform.lock.hcl
 
       - name: Terraform Init
         working-directory: terraform/environments/dev
-        run: terraform init
+        run: terraform init -upgrade
 
       - name: Terraform Apply
         working-directory: terraform/environments/dev
