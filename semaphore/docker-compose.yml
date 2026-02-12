@@ -1,0 +1,12 @@
+version: "3"
+services:
+  semaphore:
+    image: semaphoreui/semaphore:latest
+    ports:
+      - "3000:3000"
+    environment:
+      SEMAPHORE_DB_DIALECT: bolt
+    volumes:
+      - ./data:/var/lib/semaphore
+
+# docker-compose up -d

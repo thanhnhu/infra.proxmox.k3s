@@ -1,0 +1,15 @@
+- name: Join k3s cluster
+  shell: |
+    curl -sfL https://get.k3s.io | \
+    K3S_URL=https://{{ hostvars['192.168.1.10'].ansible_host }}:6443 \
+    K3S_TOKEN={{ hostvars['192.168.1.10'].k3s_token }} sh -
+    
+#- name: Get token from master
+  #shell: cat /var/lib/rancher/k3s/server/node-token
+  #delegate_to: k3s-master
+  #register: token
+
+#- name: Install K3s Worker
+  #shell: |
+    #curl -sfL https://get.k3s.io | K3S_URL=https://192.168.1.10:6443 K3S_TOKEN={{ token.stdout }} sh -
+

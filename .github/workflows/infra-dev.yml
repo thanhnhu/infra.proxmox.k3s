@@ -1,0 +1,38 @@
+name: Infra Dev
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'terraform/**'
+      - 'ansible/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform/environments/dev
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: terraform/environments/dev
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_pm_api_url: ${{ secrets.PM_API_URL }}
+          TF_VAR_pm_user: ${{ secrets.PM_USER }}
+          TF_VAR_pm_password: ${{ secrets.PM_PASSWORD }}
+          TF_VAR_ssh_key: ${{ secrets.SSH_KEY }}
+
+      - name: Install Ansible
+        run: pip install ansible
+
+      - name: Run Ansible
+        run: ansible-playbook -i ansible/inventories/dev.ini ansible/site.yml

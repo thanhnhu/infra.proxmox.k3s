@@ -1,0 +1,13 @@
+- name: Install Docker
+  include_role:
+    name: docker
+
+- name: Run Rancher container
+  docker_container:
+    name: rancher
+    image: rancher/rancher:latest
+    state: started
+    restart_policy: always
+    published_ports:
+      - "80:80"
+      - "443:443"

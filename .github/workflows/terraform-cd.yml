@@ -1,0 +1,19 @@
+name: Terraform CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: hashicorp/setup-terraform@v2
+
+      - run: terraform init
+        working-directory: terraform/envs/prod
+
+      - run: terraform apply -auto-approve
+        working-directory: terraform/envs/prod
