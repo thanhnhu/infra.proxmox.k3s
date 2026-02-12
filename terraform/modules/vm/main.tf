@@ -20,5 +20,5 @@ resource "proxmox_vm_qemu" "vm" {
   ipconfig0 = "ip=${var.ip}/24,gw=${var.gateway}"
 
   ciuser = "debian"
-  sshkeys = var.ssh_key
+  #sshkeys = var.ssh_key
 }
