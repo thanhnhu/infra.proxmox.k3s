@@ -1,7 +1,7 @@
 # Semaphore để chạy Ansible
-docker-compose up -d
+#docker-compose up -d
 
 # Helm deploy app vào K3s
 ## Trên lxc-k3s-master
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm install nginx bitnami/nginx
+#helm repo add bitnami https://charts.bitnami.com/bitnami
+#helm install nginx bitnami/nginx
