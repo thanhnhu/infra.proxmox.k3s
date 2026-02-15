@@ -43,11 +43,7 @@ tar xzf ./actions-runner-linux-x64-2.331.0.tar.gz
 ## Configure Runner
 ./config.sh --url https://github.com/thanhnhu/infra.proxmox.k3s --token AIB4KE3DDH4RBYNGCMSGUWLJSIAOC
 Nhập:
-- Repository URL
-- Token
-- Runner name → proxmox-lxc-runner
-- Labels → proxmox,lan,lxc
-- Work folder → Enter
+- Runner name → gh-runner
 
 ./run.sh
 sudo ./svc.sh install
@@ -63,6 +59,21 @@ sudo apt-add-repository \
 sudo apt update
 sudo apt install terraform -y
 terraform -version
+
+## Cài các libs cần thiết
+curl -fsSL https://apt.releases.hashicorp.com/gpg | \
+  sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | \
+  sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-main.gpg
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+sudo apt install -y nodejs
+apt install -y \
+  git \
+  curl \
+  ca-certificates \
+  npm \
+  unzip \
+  docker.io
 
 ## Cấu hình GitHub Secrets
 Settings → Secrets and variables → Actions
