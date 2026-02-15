@@ -1,50 +1,58 @@
 module "k3s_master" {
   source     = "../../modules/vm"
+  node_name  = var.node_name
+  vmid       = 101
   name       = "k3s-master"
-  node       = var.node_name
-  template   = "debian-12-template"
+  template   = "debian-12-cloud"
   cores      = 2
   memory     = 4096
   disk_size  = "30G"
   storage    = "local"
-  ip         = "192.168.1.10"
+  ip         = "192.168.1.101"
   gateway    = var.gateway
-  ssh_key    = var.ssh_key
+  password   = "admin"
+  #ssh_key    = var.ssh_key
 }
 
 module "k3s_worker" {
   source     = "../../modules/lxc"
+  node_name  = var.node_name
+  vmid       = 102
   hostname   = "k3s-worker"
-  node       = var.node_name
+  template   = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
   cores      = 2
   memory     = 2048
   disk_size  = "20G"
   storage    = "local"
-  ip         = "192.168.1.11"
+  ip         = "192.168.1.102"
   gateway    = var.gateway
   password   = "admin"
 }
 
 module "database" {
   source     = "../../modules/lxc"
+  node_name  = var.node_name
+  vmid       = 110
   hostname   = "database"
-  node       = var.node_name
+  template   = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
   cores      = 2
   memory     = 2048
   disk_size  = "30G"
   storage    = "local"
-  ip         = "192.168.1.100"
+  ip         = "192.168.1.110"
   gateway    = var.gateway
   password   = "admin"
 }
 
 module "rancher" {
   source     = "../../modules/lxc"
+  node_name  = var.node_name
+  vmid       = 200
   hostname   = "rancher"
-  node       = var.node_name
+  template   = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
   cores      = 2
   memory     = 2048
-  disk_size  = "20G"
+  disk_size  = "30G"
   storage    = "local"
   ip         = "192.168.1.200"
   gateway    = var.gateway

@@ -1,6 +1,12 @@
-variable "node_name" { type = string }
+variable "node_name" {
+  type = string
+}
+
 variable "vmid" { type = number }
-variable "hostname" { type = string }
+
+variable "name" {
+  type = string
+}
 
 variable "template" {
   type = string
@@ -22,21 +28,7 @@ variable "storage" {
   default = "local"
 }
 
-variable "disk_size" {
-  type    = string
-  default = "20G"
-}
-
-variable "password" {
-  type    = string
-  default = "admin"
-}
-
-variable "ip" {
-  type = string
-}
-
-variable "gateway" {
-  type = string
-  default = "192.168.1.1"
-}
+variable "disk_size" { type = string }
+variable "ip" { type = string }
+variable "gateway" { type = string }
+variable "password" { type = string }

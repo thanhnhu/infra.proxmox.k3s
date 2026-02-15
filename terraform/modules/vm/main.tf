@@ -1,24 +1,27 @@
-resource "proxmox_vm_qemu" "vm" {
-  target_node = var.node
-  name        = var.name
-  clone       = var.template
+resource "proxmox_virtual_environment_vm" "vm" {
+  node_name = var.node_name
+  vm_id     = var.vmid
+  name      = var.name
 
-  cores  = var.cores
-  memory = var.memory
-
-  disk {
-    size    = var.disk_size
-    type    = "scsi"
-    storage = var.storage
+  cpu {
+    cores = var.cores
   }
 
-  network {
-    model  = "virtio"
+  memory {
+    dedicated = var.memory
+  }
+
+  disk {
+    datastore_id = var.storage
+    interface    = "scsi0"
+    size         = var.disk_size
+  }
+
+  network_device {
     bridge = "vmbr0"
   }
 
-  ipconfig0 = "ip=${var.ip}/24,gw=${var.gateway}"
-
-  ciuser = "debian"
-  #sshkeys = var.ssh_key
+  operating_system {
+    type = "l26"
+  }
 }

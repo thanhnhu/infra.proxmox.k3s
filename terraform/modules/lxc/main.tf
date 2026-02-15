@@ -1,27 +1,43 @@
-resource "proxmox_lxc" "lxc" {
-  target_node  = var.node_name
-  hostname     = var.hostname
-  ostemplate   = var.template
-  #ostemplate   = "local:vztmpl/debian-12-standard_12.0-1_amd64.tar.zst"
+resource "proxmox_virtual_environment_container" "lxc" {
+  node_name = var.node_name
+  vm_id     = var.vmid
+  started   = true
 
-  cores  = var.cores
-  memory = var.memory
+  initialization {
+    hostname = var.hostname
 
-  rootfs {
-    storage = var.storage
-    size    = var.disk_size
+    ip_config {
+      ipv4 {
+        address = "${var.ip}/24"
+        gateway = var.gateway
+      }
+    }
+
+    user_account {
+      password = var.password
+    }
   }
 
-  network {
-    name   = "eth0"
-    bridge = "vmbr0"
-    ip     = "${var.ip}/24"
-    gw     = var.gateway
+  operating_system {
+    template_file_id = var.template
+    type             = "debian"
   }
 
-  password      = var.password
-  unprivileged  = false
-  features {
-    nesting = true
+  cpu {
+    cores = var.cores
+  }
+
+  memory {
+    dedicated = var.memory
+  }
+
+  disk {
+    datastore_id = var.storage
+    size         = var.disk_size
+  }
+
+  network_interface {
+    name = "eth0"
+    bridge = "vmbr1"
   }
 }

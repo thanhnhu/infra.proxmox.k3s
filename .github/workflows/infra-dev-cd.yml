@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:        
       - uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
           TF_VAR_pm_api_url: ${{ secrets.PM_API_URL }}
           TF_VAR_pm_user: ${{ secrets.PM_USER }}
           TF_VAR_pm_password: ${{ secrets.PM_PASSWORD }}
-          TF_VAR_node_name: ${{ secrets.PM_NODE_NAME }}
+          TF_VAR_node: ${{ secrets.PM_NODE_NAME }}
           #TF_VAR_ssh_key: ${{ secrets.SSH_KEY }}
           #TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
 
