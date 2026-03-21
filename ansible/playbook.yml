@@ -1,0 +1,66 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Health Check SSH
+      wait_for_connection:
+        timeout: 30
+
+# Install Cloudflared on Proxmox host (or GitHub Runner server)
+- hosts: proxmox_host
+  become: yes
+  roles:
+    - cloudflare_tunnel
+    #- rancher
+
+- hosts: all
+  become: yes
+  roles:
+    - common
+
+# Install on GitHub Runner (localhost)
+- hosts: localhost
+  connection: local
+  become: yes
+  roles:
+    - docker
+    - helm
+    - prometheus
+    - grafana
+    #- semaphore
+
+#- hosts: rancher
+  #become: yes
+  #roles:
+    #- rancher
+
+- hosts: database
+  become: yes
+  roles:
+    - docker
+    - database
+
+- hosts: k3s_master
+  become: yes
+  roles:
+    - k3s_server
+
+#- hosts: k3s_worker
+  #become: yes
+  #roles:
+    #- k3s_agent
+
+#- hosts: k3s_deploy
+  #become: yes
+  #roles:
+    #- k3s_deploy
+
+- hosts: argocd_deploy
+  become: yes
+  roles:
+    - argocd
+
+# Clean unused images/files
+- hosts: all
+  become: yes
+  roles:
+    - cleanup

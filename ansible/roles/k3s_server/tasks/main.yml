@@ -1,0 +1,120 @@
+---
+- name: Install K3s Master
+  shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable-network-policy --node-ip=192.168.2.120" sh -
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: Fix /dev/kmsg and Restart K3s
+  block:
+    - name: Create symlink for /dev/kmsg
+      ansible.builtin.file:
+        src: /dev/console
+        dest: /dev/kmsg
+        state: link
+        force: yes
+
+    - name: Restart K3s service
+      ansible.builtin.service:
+        name: k3s
+        state: restarted
+  become: yes
+
+- name: Wait for K3s API server to be responsive
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 6443
+    delay: 10
+    timeout: 300
+    state: started
+
+- name: Wait for k3s.yaml to exist
+  ansible.builtin.wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    timeout: 60
+
+- name: Wait for K3s service to be fully Active
+  ansible.builtin.command: systemctl is-active k3s
+  register: k3s_status
+  until: k3s_status.stdout == "active"
+  retries: 10
+  delay: 10
+  changed_when: false
+  ignore_errors: yes
+
+- name: Debug and Stop if K3s failed to start
+  block:
+    - name: Get K3s Logs for Debugging
+      command: journalctl -u k3s -n 50
+      register: k3s_logs
+      changed_when: false
+
+    - name: Show K3s Logs in Console
+      debug:
+        var: k3s_logs.stdout_lines
+
+    - name: STOP PLAYBOOK - K3s is not healthy
+      ansible.builtin.fail:
+        msg: "K3s failed to reach 'active' state. Check logs above for details."
+  when: k3s_status.stdout != "active"
+
+- name: Wait for API to stabilize
+  pause:
+    seconds: 30
+
+- name: Debug K3s Port
+  shell: netstat -tulpn | grep 6443
+  register: port_check
+  ignore_errors: yes
+
+- name: Show Port Status
+  debug:
+    var: port_check.stdout
+
+- name: Ensure app namespaces exist
+  kubernetes.core.k8s:
+    name: "{{ item }}"
+    kind: Namespace
+    state: present
+    #host: https://127.0.0.1:6443
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+    verify_ssl: false
+  become: yes
+  loop: "{{ app_namespaces }}" # Loop from group_vars
+  register: ns_create
+  until: ns_create is succeeded
+  retries: 3
+  delay: 10
+
+- name: Create GHCR image pull secrets in each namespace
+  kubernetes.core.k8s:
+    state: present
+    # Point the right K3s config file
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "{{ ghcr_secret_name }}"
+        namespace: "{{ item }}"
+      type: kubernetes.io/dockerconfigjson
+      data:
+        .dockerconfigjson: "{{ { 'auths': { 'ghcr.io': { 'auth': (ghcr_user + ':' + ghcr_token) | b64encode } } } | to_json | b64encode }}"
+  become: yes
+  loop: "{{ app_namespaces }}" # Loop from group_vars
+
+- name: Fetch and Fix Kubeconfig from K3s Master to GitHub Runner
+  block:
+    - name: Slurp kubeconfig from Master
+      # Point the right K3s config file
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/k3s.yaml
+      register: kubeconfig_raw
+      become: yes
+
+    - name: Save fixed Kubeconfig to Runner
+      ansible.builtin.copy:
+        content: "{{ kubeconfig_raw.content | b64decode | replace('127.0.0.1', ansible_host) }}"
+        dest: /tmp/k3s.yaml
+        mode: '0644'
+      delegate_to: localhost

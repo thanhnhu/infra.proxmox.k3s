@@ -1,0 +1,27 @@
+name: Infrastructure CI
+
+on:
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - 'terraform/**'
+      - 'ansible/**'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: hashicorp/setup-terraform@v2
+
+      - run: terraform init
+        working-directory: terraform/environments/dev
+
+      - run: terraform validate
+        working-directory: terraform/environments/dev
+
+      - run: terraform plan
+        working-directory: terraform/environments/dev

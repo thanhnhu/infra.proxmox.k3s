@@ -1,0 +1,26 @@
+- name: Install Docker
+  include_role:
+    name: docker
+
+- name: Create Rancher data directory
+  ansible.builtin.file:
+    path: /opt/rancher
+    state: directory
+    mode: '0755'
+
+- name: Run Rancher container
+  community.docker.docker_container:
+    name: rancher
+    image: rancher/rancher:latest
+    state: started
+    privileged: yes
+    restart_policy: unless-stopped
+    published_ports:
+      #- "80:80"
+      #- "443:443"
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - /opt/rancher:/var/lib/rancher
+    timeout: 60
+  become: yes

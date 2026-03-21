@@ -1,0 +1,27 @@
+---
+- name: Update apt cache and install base packages
+  apt:
+    name:
+      - curl
+      - sudo
+      - nano
+      - net-tools
+      - python3-pip
+      - python3-cryptography
+      - python3-openssl
+      - python3-kubernetes
+      - python3-yaml
+    state: present
+    update_cache: yes
+
+- name: Disable swap permanently
+  mount:
+    name: swap
+    fstype: swap
+    state: absent
+
+- name: Ensure /etc/rancher/k3s/ exists for later
+  file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: '0755'

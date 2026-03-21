@@ -1,0 +1,37 @@
+tunnel: {{ tunnel_id }}
+credentials-file: /etc/cloudflared/{{ tunnel_id }}.json
+protocol: http2
+
+ingress: # Rule order by asc
+  - hostname: pve.vfriends.info
+    service: https://192.168.2.100:8006
+    originRequest:
+      noTLSVerify: true
+      httpHostHeader: localhost
+
+  - hostname: rancher.vfriends.info
+    #service: https://192.168.2.100:443
+    service: https://localhost:8443
+    originRequest:
+      noTLSVerify: true
+      httpHostHeader: rancher.vfriends.info
+
+  - hostname: semaphore.vfriends.info
+    service: http://localhost:3000
+
+  - hostname: prometheus.vfriends.info
+    service: http://localhost:9090
+
+  - hostname: grafana.vfriends.info
+    service: http://localhost:4080
+
+  # localfriends app
+  - hostname: vfriends.info
+    service: http://192.168.2.120:80
+
+  # Other point to K3s-ingress (Traefik)
+  - hostname: "*.vfriends.info"
+    service: http://192.168.2.120:80
+
+  # fallback - default rule
+  - service: http_status:404

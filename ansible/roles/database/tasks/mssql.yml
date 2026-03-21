@@ -1,0 +1,23 @@
+---
+- name: Create SQL Server data directory
+  file:
+    path: /opt/docker/mssql
+    state: directory
+    owner: 10001
+    group: 0
+    mode: "0777"
+
+- name: Run SQL Server container
+  community.docker.docker_container:
+    name: mssql
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "1433:1433"
+    volumes:
+      - /opt/docker/mssql:/var/opt/mssql
+    env:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "{{ mssql_sa_pass }}"
+      MSSQL_PID: "{{ mssql_edition | default('Express') }}"

@@ -1,0 +1,47 @@
+imagePullSecrets:
+  - name: k3s-ghcr-pull-secret
+
+server:
+  enabled: true
+  repository: ghcr.io/thanhnhu/giveandtake-be
+  tag: "latest"
+  containerPort: 8090
+  replicaCount: 1
+
+client:
+  enabled: true
+  repository: ghcr.io/thanhnhu/giveandtake-fe
+  tag: "latest"
+  containerPort: 8091
+  replicaCount: 1
+
+ingress:
+  enabled: true
+  #className: traefik
+  hosts:
+    - host: give.vfriends.info
+      paths:
+        - path: /api
+          pathType: ImplementationSpecific
+          backendService: server
+          backendPort: 8090
+    - host: give.vfriends.info
+      paths:
+        - path: /docs
+          pathType: ImplementationSpecific
+          backendService: server
+          backendPort: 8090
+    - host: give.vfriends.info
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+          backendService: client
+          backendPort: 8091
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 256Mi

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+  labels:
+    app: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount | default 2 }}
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.repository }}:{{ .Values.backend.tag }}"
+        imagePullPolicy: Always
+        envFrom:
+        - secretRef:
+            name: localfriends-secrets
+        ports:
+          - containerPort: {{ .Values.backend.containerPort }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        livenessProbe:
+          httpGet:
+            #path: /health
+            path: /
+            port: {{ .Values.backend.containerPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        {{/*
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.backend.containerPort }}
+        */}}

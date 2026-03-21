@@ -1,0 +1,10 @@
+apiVersion: v2
+name: localfriends
+description: A Helm chart for localfriends application
+type: application
+
+# Chart version
+version: 0.1.0
+
+# App version
+appVersion: "1.0.0"

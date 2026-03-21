@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-giveandtake
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: "https://{{ ghcr_token }}@github.com/thanhnhu/infra.proxmox.k3s.git"
+    targetRevision: HEAD # newest pushed branch
+    #targetRevision: dev # branch dev
+    path: helm/charts/app-giveandtake # Path to Helm chart in repo
+    helm:
+      valueFiles: ["values.yaml"]
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: giveandtake
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: true
+  delegate_to: localhost

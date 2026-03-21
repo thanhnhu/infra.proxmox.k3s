@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-server
+  labels:
+    app: server
+spec:
+  replicas: {{ .Values.server.replicaCount | default 2 }}
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: server
+        image: "{{ .Values.server.repository }}:{{ .Values.server.tag }}"
+        imagePullPolicy: Always
+        envFrom:
+        - secretRef:
+            name: giveandtake-secrets
+        volumeMounts:
+        - name: creds-volume
+          mountPath: /app/credentials.json
+          subPath: credentials.json
+        ports:
+          - containerPort: {{ .Values.server.containerPort }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        livenessProbe:
+          httpGet:
+            #path: /health
+            path: /
+            port: {{ .Values.server.containerPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        {{/*
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.server.containerPort }}
+        */}}
+      volumes:
+      - name: creds-volume
+        secret:
+          secretName: app-credentials

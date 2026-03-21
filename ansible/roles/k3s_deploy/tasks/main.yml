@@ -1,0 +1,35 @@
+---
+- name: Fetch and Fix Kubeconfig from K3s Master to GitHub Runner
+  block:
+    - name: Slurp kubeconfig from Master
+      # Point the right K3s config file
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/k3s.yaml
+      register: kubeconfig_raw
+      become: yes
+
+    - name: Save fixed Kubeconfig to Runner
+      ansible.builtin.copy:
+        content: "{{ kubeconfig_raw.content | b64decode | replace('127.0.0.1', ansible_host) }}"
+        dest: /tmp/k3s.yaml
+        mode: '0600'
+      delegate_to: localhost
+  when: false # skip this step, use ArgoCD instead
+
+- name: Deploy App using Helm
+  kubernetes.core.helm:
+    name: giveandtake-release
+    chart_ref: "{{ playbook_dir }}/../helm/charts/app-giveandtake"
+    release_namespace: giveandtake
+    # K3s config file copied to Runner at above step
+    kubeconfig: "/tmp/k3s.yaml"
+    values_files: "{{ playbook_dir }}/../helm/charts/app-giveandtake/values-dev.yaml"
+    values:
+      server:
+        tag: "{{ image_tag }}"
+      client:
+        tag: "{{ image_tag }}"
+    wait: yes
+  delegate_to: localhost # Run in Runner but affected to K3s
+  become: yes
+  when: false # skip this step, use ArgoCD instead

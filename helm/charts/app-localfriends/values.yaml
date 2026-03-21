@@ -1,0 +1,52 @@
+imagePullSecrets:
+  - name: k3s-ghcr-pull-secret
+
+backend:
+  enabled: true
+  repository: ghcr.io/thanhnhu/localfriends-be
+  tag: "latest"
+  containerPort: 5000
+  replicaCount: 1
+
+frontend:
+  enabled: true
+  repository: ghcr.io/thanhnhu/localfriends-fe
+  tag: "latest"
+  containerPort: 80
+  replicaCount: 1
+
+ingress:
+  enabled: true
+  hosts:
+    - host: vfriends.info
+      paths:
+        - path: /api
+          pathType: ImplementationSpecific
+          backendService: backend
+          backendPort: 5000
+    - host: vfriends.info
+      paths:
+        - path: /swagger
+          pathType: ImplementationSpecific
+          backendService: backend
+          backendPort: 5000
+    - host: vfriends.info
+      paths:
+        - path: /notificationHub
+          pathType: ImplementationSpecific
+          backendService: backend
+          backendPort: 5000
+    - host: vfriends.info
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+          backendService: frontend
+          backendPort: 80
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 256Mi

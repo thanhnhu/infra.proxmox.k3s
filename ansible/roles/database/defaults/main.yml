@@ -1,0 +1,7 @@
+---
+mssql_sa_pass: "{{ MSSQL_SA_PASS }}"
+pg_version: "17"
+db_name: "{{ GT_DB_NAME }}"
+db_user: "{{ GT_DB_USER }}"
+db_password: "{{ GT_DB_PASS }}"
+k3s_subnet: "{{ K3S_SUBNET }}" #192.168.2.0/24

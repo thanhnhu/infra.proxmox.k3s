@@ -1,0 +1,57 @@
+---
+- name: Install dependencies
+  become: yes
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - curl
+      - ca-certificates
+    state: present
+    update_cache: yes
+
+- name: Import Grafana GPG key if not exists
+  become: yes
+  shell: |
+    curl -fsSL https://packages.grafana.com/gpg.key | \
+    gpg --dearmor | tee /usr/share/keyrings/grafana.gpg > /dev/null
+  args:
+    creates: /usr/share/keyrings/grafana.gpg
+
+- name: Add Grafana repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com stable main"
+    state: present
+  become: yes
+
+- name: Install Grafana
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Change Grafana port
+  ansible.builtin.lineinfile:
+    path: /etc/grafana/grafana.ini
+    regexp: '^;?http_port ='
+    line: 'http_port = 4080'
+  notify: Restart Grafana
+  become: yes
+
+- name: Start & Enable Grafana service
+  ansible.builtin.systemd:
+    name: grafana-server
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Gather installed packages
+  package_facts:
+
+- name: Allow Grafana port if ufw exists
+  community.general.ufw:
+    rule: allow
+    port: "4080"
+    proto: tcp
+  when: "'ufw' in ansible_facts.packages"
+  become: yes

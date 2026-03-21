@@ -1,0 +1,82 @@
+---
+- name: Check if cloudflared is already installed
+  ansible.builtin.command: cloudflared --version
+  register: cf_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Download and Install cloudflared (Debian)
+  block:
+    - name: Download .deb package
+      ansible.builtin.get_url:
+        url: https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+        dest: /tmp/cloudflared.deb
+
+    - name: Install .deb package
+      ansible.builtin.apt:
+        deb: /tmp/cloudflared.deb
+        state: present
+  when: cf_check.rc != 0
+
+- name: Ensure /etc/cloudflared directory exists
+  file:
+    path: /etc/cloudflared
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+
+- name: Write Tunnel Credentials file
+  ansible.builtin.copy:
+    content: "{{ tunnel_json | b64decode }}"
+    dest: "/etc/cloudflared/{{ tunnel_id }}.json"
+    mode: '0600'
+  become: yes
+
+- name: Ensure config directory exists
+  file:
+    path: /etc/cloudflared
+    state: directory
+    mode: '0755'
+
+- name: Deploy Cloudflared Config
+  template:
+    src: config.yml.j2
+    dest: /etc/cloudflared/config.yml
+  notify: Restart Cloudflared # Same name as handlers file
+  become: yes
+
+- name: Install cloudflared as a system service
+  ansible.builtin.shell: |
+    #cloudflared service install {{ CLOUDFLARE_TUNNEL_TOKEN }}
+    cloudflared service install 
+  args:
+    creates: /etc/systemd/system/cloudflared.service
+  #when: CLOUDFLARE_TUNNEL_TOKEN is defined
+  become: yes
+
+- name: Get cloudflared executable path
+  ansible.builtin.command: which cloudflared
+  register: cloudflared_path
+  changed_when: false
+
+- name: Update Systemd to use Config Local
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system/cloudflared.service
+    regexp: '^ExecStart='
+    line: 'ExecStart={{ cloudflared_path.stdout }} --config /etc/cloudflared/config.yml tunnel run'
+  register: service_config
+  become: yes
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  when: service_config.changed
+  become: yes
+
+- name: Ensure cloudflared service is started and enabled
+  ansible.builtin.service:
+    name: cloudflared
+    state: started
+    enabled: yes

@@ -1,0 +1,23 @@
+- name: Create Data Directory
+  ansible.builtin.file:
+    path: /opt/semaphore/data
+    state: directory
+    mode: '0777'
+  become: yes
+
+- name: Run Semaphore on Docker
+  community.docker.docker_container:
+    name: semaphore
+    #image: semaphoreui/semaphore:latest
+    image: semaphoreui/semaphore:v2.16.45
+    state: started
+    restart_policy: always
+    published_ports:
+      - "3000:3000"
+    volumes:
+      - "/opt/semaphore/data:/var/lib/semaphore"
+      - "{{ playbook_dir }}:/etc/semaphore/playbooks"
+    env:
+      SEMAPHORE_DB_DIALECT: bolt
+      SEMAPHORE_ADMIN: "{{ SEMAPHORE_USER }}"
+      SEMAPHORE_ADMIN_PASSWORD: "{{ SEMAPHORE_PASSWORD }}"

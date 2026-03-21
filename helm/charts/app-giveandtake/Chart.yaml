@@ -1,0 +1,10 @@
+apiVersion: v2
+name: giveandtake
+description: A Helm chart for GiveAndTake application
+type: application
+
+# Chart version
+version: 0.1.0
+
+# App version
+appVersion: "1.0.0"

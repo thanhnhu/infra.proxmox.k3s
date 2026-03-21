@@ -1,0 +1,32 @@
+---
+- name: Check if Docker is running
+  ansible.builtin.command: docker ps
+  register: docker_check
+  changed_when: false
+  failed_when: false
+  ignore_errors: yes
+
+- name: Cleanup Docker (Only for nodes with Docker installed)
+  community.docker.docker_prune:
+    containers: yes
+    images: yes
+    images_filters:
+      dangling: false
+  when: docker_check.rc == 0
+
+- name: Cleanup K3s (containerd) images - regex start with k3s
+  ansible.builtin.shell: k3s crictl rmi --prune
+  register: k3s_cleanup
+  when:
+    - group_names | select('match', '^k3s.*') | list | length > 0
+    #- inventory_hostname in groups.get('k3s_master', []) or inventory_hostname in groups.get('k3s_worker', [])
+  changed_when: "'Deleted' in k3s_cleanup.stdout"
+  failed_when: false
+
+- name: Remove temporary build files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/get-docker.sh
+    - /tmp/helm-install.sh

@@ -1,0 +1,10 @@
+---
+- name: Restart MSSQL
+  service:
+    name: mssql-server
+    state: restarted
+
+- name: Restart PostgreSQL
+  service:
+    name: postgresql
+    state: restarted

@@ -1,0 +1,9 @@
+---
+# Namespace to create
+app_namespaces:
+  - localfriends
+  - giveandtake
+  #- staging
+
+# Common GHCR image pull secret
+ghcr_secret_name: "k3s-ghcr-pull-secret"

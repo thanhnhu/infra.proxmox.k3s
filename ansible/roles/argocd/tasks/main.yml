@@ -1,0 +1,119 @@
+---
+- name: Fetch and Fix Kubeconfig from K3s Master to GitHub Runner
+  block:
+    - name: Slurp kubeconfig from Master
+      # Point the right K3s config file
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/k3s.yaml
+      register: kubeconfig_raw
+      become: yes
+
+    - name: Save fixed Kubeconfig to Runner
+      ansible.builtin.copy:
+        content: "{{ kubeconfig_raw.content | b64decode | replace('127.0.0.1', ansible_host) }}"
+        dest: /tmp/k3s.yaml
+        mode: '0644'
+      delegate_to: localhost
+
+- name: Add ArgoCD Helm Repository
+  kubernetes.core.helm_repository:
+    name: argo
+    repo_url: "https://argoproj.github.io/argo-helm"
+  delegate_to: localhost
+
+- name: Install ArgoCD using Helm
+  kubernetes.core.helm:
+    name: argocd
+    chart_ref: argo/argo-cd
+    chart_version: 7.3.11 # Stable version
+    release_namespace: argocd
+    create_namespace: true
+    kubeconfig: "/tmp/k3s.yaml"
+    values:
+      server:
+        extraArgs: ["--insecure"] # If run after Ingress/Traefik
+  delegate_to: localhost
+
+- name: Ensure namespace giveandtake exists
+  kubernetes.core.k8s:
+    name: giveandtake
+    kind: Namespace
+    state: present
+    kubeconfig: "/tmp/k3s.yaml"
+  delegate_to: localhost
+
+- name: Deploy all localfriends secrets to k3s
+  kubernetes.core.k8s:
+    kubeconfig: "/tmp/k3s.yaml"
+    state: present
+    definition: "{{ item }}"
+  with_items:
+    # Env vars from GitHub Secrets
+    - apiVersion: v1
+      kind: Secret
+      metadata:
+        name: localfriends-secrets
+        namespace: localfriends
+      stringData:
+        ConnectionStrings__DefaultConnection: "{{ LF_DB_CONNECTIONSTRINGS }}"
+        Authentication__Facebook__AppId: "{{ FB_APP_ID }}"
+        Authentication__Facebook__AppSecret: "{{ FB_APP_SECRET }}"
+        Authentication__Google__ClientId: "{{ GOOGLE_CLIENT_ID }}"
+        Authentication__Google__ClientSecret: "{{ GOOGLE_CLIENT_SECRET }}"
+        GOOGLE_MAPS_API_KEY: "{{ GOOGLE_MAPS_API_KEY }}"
+      data:
+        # Base64 config.json from GitHub secrets
+        config.json: "{{ CONFIG_JSON }}"
+  delegate_to: localhost
+
+- name: Deploy all GiveAndTake secrets to k3s
+  kubernetes.core.k8s:
+    kubeconfig: "/tmp/k3s.yaml"
+    state: present
+    definition: "{{ item }}"
+  with_items:
+    # Env vars from GitHub Secrets
+    - apiVersion: v1
+      kind: Secret
+      metadata:
+        name: giveandtake-secrets
+        namespace: giveandtake
+      stringData:
+        DB_HOST: "{{ GT_DB_HOST }}"
+        DB_PORT: "5432"
+        DB_NAME: "{{ GT_DB_NAME }}"
+        DB_USER: "{{ GT_DB_USER }}"
+        DB_PASSWORD: "{{ GT_DB_PASS }}"
+        #DJANGO_SECRET_KEY: "{{ DJANGO_SECRET_KEY }}"
+    # File mount (volume mount)
+    - apiVersion: v1
+      kind: Secret
+      metadata:
+        name: app-credentials
+        namespace: giveandtake
+      type: Opaque
+      data:
+        # Base64 Credentials from GitHub secrets
+        credentials.json: "{{ GT_CREDENTIALS }}"
+  delegate_to: localhost
+
+- name: Deploy ArgoCD K3s Ingress
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: "/tmp/k3s.yaml"
+    definition: "{{ lookup('template', 'ingress.yaml.j2') }}"
+  delegate_to: localhost
+
+- name: Deploy localfriends app to ArgoCD (The GitOps part)
+  kubernetes.core.k8s:
+    kubeconfig: "/tmp/k3s.yaml"
+    state: present
+    definition: "{{ lookup('template', 'app-localfriends.yml.j2') }}"
+  delegate_to: localhost
+
+- name: Deploy giveandtake app to ArgoCD (The GitOps part)
+  kubernetes.core.k8s:
+    kubeconfig: "/tmp/k3s.yaml"
+    state: present
+    definition: "{{ lookup('template', 'app-giveandtake.yml.j2') }}"
+  delegate_to: localhost

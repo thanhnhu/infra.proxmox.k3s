@@ -1,0 +1,27 @@
+---
+- name: Check for br_netfilter module
+  shell: lsmod | grep br_netfilter
+  register: mod_check
+  failed_when: false
+  changed_when: false
+
+- name: Create symlink for /dev/kmsg
+  ansible.builtin.file:
+    src: /dev/console
+    dest: /dev/kmsg
+    state: link
+    force: yes
+  ignore_errors: yes
+
+- name: Get token from master
+  shell: cat /var/lib/rancher/k3s/server/node-token
+  delegate_to: k3s-master
+  register: token
+  become: yes
+
+- name: Install and join K3s cluster
+  shell: |
+    curl -sfL https://get.k3s.io | \
+    K3S_URL=https://{{ hostvars['k3s-master'].ansible_host | default('192.168.2.120') }}:6443 \
+    K3S_TOKEN={{ token.stdout }} sh -
+  become: yes

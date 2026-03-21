@@ -1,0 +1,78 @@
+# GitHub Hosted Runner on Home Proxmox
+name: Infrastructure CD
+
+on:
+  workflow_dispatch: # allow manual run
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/**'
+      - 'terraform/**'
+      - 'ansible/**'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    env:
+      # Terraform variables
+      TF_DIR: terraform/environments/prod
+      TF_VAR_pm_api_url: ${{ secrets.PM_API_URL }}
+      TF_VAR_pm_host: ${{ secrets.PM_HOST }}
+      TF_VAR_pm_user: ${{ secrets.PM_USER }}
+      TF_VAR_pm_password: ${{ secrets.PM_PASSWORD }}
+      TF_VAR_node: ${{ secrets.PM_NODE_NAME }}
+      TF_VAR_lxc_user: ${{ secrets.LXC_USER }}
+      TF_VAR_lxc_password: ${{ secrets.LXC_PASSWORD }}
+      TF_VAR_lxc_ssh_key: ${{ secrets.LXC_SSH_KEY }}
+      #TF_VAR_ssh_key: ${{ secrets.SSH_KEY }}
+      #TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+      # Ansible variables
+      ANSIBLE_HOST_KEY_CHECKING: False
+      PM_USER: ${{ secrets.PM_USER }}
+      PM_PASSWORD: ${{ secrets.PM_PASSWORD }}
+      LXC_USER: ${{ secrets.LXC_USER }}
+      LXC_PASSWORD: ${{ secrets.LXC_PASSWORD }}
+      LXC_SSH_KEY: ${{ secrets.LXC_SSH_KEY }}
+      GHCR_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    steps:
+      - run: echo "TRIGGER OK"
+
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        
+      #- name: Clean Terraform
+        #run: |
+          #rm -rf $TF_DIR/.terraform
+          #rm -f $TF_DIR/.terraform.lock.hcl
+
+      - name: Terraform Init
+        run: terraform -chdir=$TF_DIR init -upgrade
+
+      - name: Terraform Apply
+        run: terraform -chdir=$TF_DIR apply -auto-approve
+
+      - name: Install Ansible
+        run: |
+          python3 -m pip install --user ansible --break-system-packages
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install SSHPass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+      - name: Run Ansible
+        run: |
+          ansible-playbook -i ansible/inventories/prod/hosts.yml ansible/playbook.yml \
+          --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+          --extra-vars "PM_HOST=${{ secrets.PM_HOST }} PM_USER=${{ secrets.PM_USER }} PM_PASSWORD=${{ secrets.PM_PASSWORD }}" \
+          --extra-vars "ansible_user=${LXC_USER} ansible_password=${LXC_PASSWORD} ansible_become_password=${LXC_PASSWORD}" \
+          --extra-vars "SEMAPHORE_USER=${{ secrets.LXC_USER }} SEMAPHORE_PASSWORD=${{ secrets.LXC_PASSWORD }}" \
+          --extra-vars "tunnel_id=${{ secrets.CF_TUNNEL_ID }} tunnel_json='${{ secrets.CF_TUNNEL_JSON }}' CLOUDFLARE_TUNNEL_TOKEN=${{ secrets.CF_TUNNEL_TOKEN }}" \
+          --extra-vars "ghcr_user=${{ github.actor }} ghcr_token=${{ secrets.GH_TOKEN }} image_tag=latest" \
+          --extra-vars "LF_DB_CONNECTIONSTRINGS='${{ secrets.LF_DB_CONNECTIONSTRINGS }}' MSSQL_SA_PASS=${{ secrets.MSSQL_SA_PASS }} FB_APP_ID=${{ secrets.LF_FB_APP_ID }} FB_APP_SECRET=${{ secrets.LF_FB_APP_SECRET }} GOOGLE_CLIENT_ID=${{ secrets.LF_GOOGLE_CLIENT_ID }} GOOGLE_CLIENT_SECRET=${{ secrets.LF_GOOGLE_CLIENT_SECRET }} GOOGLE_MAPS_API_KEY=${{ secrets.LF_GOOGLE_MAPS_API_KEY }} CONFIG_JSON='${{ secrets.LF_CONFIG_JSON }}'" \
+          --extra-vars "GT_CREDENTIALS='${{ secrets.GT_CREDENTIALS }}' K3S_SUBNET=${{ secrets.K3S_SUBNET }} GT_DB_HOST=${{ secrets.GT_DB_HOST }} GT_DB_NAME=${{ secrets.GT_DB_NAME }} GT_DB_USER=${{ secrets.GT_DB_USER }} GT_DB_PASS=${{ secrets.GT_DB_PASS }}"
