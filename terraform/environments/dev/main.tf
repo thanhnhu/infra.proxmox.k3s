@@ -50,7 +50,7 @@ module "database" {
   lxc_ssh_key  = var.lxc_ssh_key
 }
 
-module "k3s_master" {
+module "k3s_master_vm" {
   count         = 0 # disable deploy
   vms = {
     k3s-master  = { ip = "192.168.2.130", id = 0 }
