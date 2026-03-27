@@ -21,6 +21,9 @@ module "rancher" {
 
   #password    = var.lxc_password
   #ssh_key     = var.ssh_key
+  pm_host      = var.pm_host
+  pm_user      = var.pm_user
+  pm_password  = var.pm_password
   lxc_user     = var.lxc_user
   lxc_password = var.lxc_password
   lxc_ssh_key  = var.lxc_ssh_key
