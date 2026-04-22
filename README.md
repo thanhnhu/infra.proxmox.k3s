@@ -176,14 +176,16 @@ All Done!
 
 ### Install kubectl
 ```bash
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-kubectl version --client
+# curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+# sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+# K3s includes kubectl built-in — just create a symlink
+sudo ln -sf /usr/local/bin/k3s /usr/local/bin/kubectl
+sudo k3s kubectl version --client
 ls -l /tmp/k3s.yaml
 export KUBECONFIG=/tmp/k3s.yaml
 echo "export KUBECONFIG=/tmp/k3s.yaml" >> ~/.bashrc
 # List k3s ingress
-kubectl get ingress -A
+sudo k3s kubectl get ingress -A
 ```
 
 ### Check Cloudflared config

@@ -21,3 +21,21 @@
       POSTGRES_DB: "{{ db_name }}"
       POSTGRES_USER: "{{ db_user }}"
       POSTGRES_PASSWORD: "{{ db_password }}"
+
+- name: Wait for PostgreSQL to be ready
+  ansible.builtin.command: >
+    docker exec postgres pg_isready -U {{ db_user }}
+  register: pg_ready
+  until: pg_ready.rc == 0
+  retries: 15
+  delay: 3
+  changed_when: false
+
+- name: Set pg_hba.conf to allow K3s subnet
+  ansible.builtin.shell: |
+    docker exec postgres bash -c "
+      grep -qF '{{ k3s_subnet }}' /var/lib/postgresql/data/pg_hba.conf ||
+      echo 'host all all {{ k3s_subnet }} scram-sha-256' >> /var/lib/postgresql/data/pg_hba.conf
+    "
+    docker exec postgres psql -U {{ db_user }} -c 'SELECT pg_reload_conf();'
+  changed_when: false
