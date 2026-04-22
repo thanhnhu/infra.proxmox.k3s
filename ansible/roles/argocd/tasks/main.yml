@@ -88,6 +88,7 @@
         CLOUDINARY_CLOUD_NAME: "{{ GT_CLOUDINARY_CLOUD_NAME }}"
         CLOUDINARY_API_KEY: "{{ GT_CLOUDINARY_API_KEY }}"
         CLOUDINARY_API_SECRET: "{{ GT_CLOUDINARY_API_SECRET }}"
+        RUN_MIGRATIONS: "true"
   delegate_to: localhost
 
 - name: Deploy ArgoCD K3s Ingress

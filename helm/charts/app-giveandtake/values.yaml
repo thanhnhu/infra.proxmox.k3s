@@ -25,14 +25,6 @@ ingress:
           pathType: ImplementationSpecific
           backendService: backend
           backendPort: 8090
-    - host: give.vfriends.info
-      paths:
-        - path: /docs
-          pathType: ImplementationSpecific
-          backendService: backend
-          backendPort: 8090
-    - host: give.vfriends.info
-      paths:
         - path: /
           pathType: ImplementationSpecific
           backendService: frontend

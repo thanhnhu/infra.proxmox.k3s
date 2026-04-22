@@ -165,7 +165,7 @@ CF_TUNNEL_JSON = sudo cat /etc/cloudflared/{{ tunnel_id }}.json | base64 -w 0 \
 LF_CONFIG_JSON = echo -n '{"googleMapsApiKey":"AIza..."}' | base64 -w0 \
 
 Refs: \
-https://github.com/thanhnhu/local.friends
+https://github.com/thanhnhu/local.friends \
 https://github.com/thanhnhu/GiveAndTake
 
 ### Deploy by run
