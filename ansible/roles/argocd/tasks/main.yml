@@ -84,17 +84,10 @@
         DB_NAME: "{{ GT_DB_NAME }}"
         DB_USER: "{{ GT_DB_USER }}"
         DB_PASSWORD: "{{ GT_DB_PASS }}"
-        #DJANGO_SECRET_KEY: "{{ DJANGO_SECRET_KEY }}"
-    # File mount (volume mount)
-    - apiVersion: v1
-      kind: Secret
-      metadata:
-        name: app-credentials
-        namespace: giveandtake
-      type: Opaque
-      data:
-        # Base64 Credentials from GitHub secrets
-        credentials.json: "{{ GT_CREDENTIALS }}"
+        STORAGE_TYPE: "cloudinary"
+        CLOUDINARY_CLOUD_NAME: "{{ GT_CLOUDINARY_CLOUD_NAME }}"
+        CLOUDINARY_API_KEY: "{{ GT_CLOUDINARY_API_KEY }}"
+        CLOUDINARY_API_SECRET: "{{ GT_CLOUDINARY_API_SECRET }}"
   delegate_to: localhost
 
 - name: Deploy ArgoCD K3s Ingress

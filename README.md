@@ -24,7 +24,7 @@ iface vmbr1 inet static
 
 Download Debian 13 (Trixie) LXC in Proxmox Templates or [here](http://download.proxmox.com/images/system/debian-13-standard_13.1-2_amd64.tar.zst)
 
-### Create LXC on Proxmox (Home/VPS-Contabo)
+### Create LXC on Home Proxmox
 ```bash
 pct create 200 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
   --hostname github-runner \
@@ -38,7 +38,7 @@ pct create 200 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
   --onboot 1
 ```
 
-### Or create LXC on VPS Proxmox
+### Or create LXC on VPS Proxmox (Contabo)
 ```bash
 pct create 200 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
   --hostname github-runner \
@@ -163,7 +163,10 @@ LXC_PASSWORD = \
 K3S_SUBNET = 192.168.2.0/24 \
 CF_TUNNEL_JSON = sudo cat /etc/cloudflared/{{ tunnel_id }}.json | base64 -w 0 \
 LF_CONFIG_JSON = echo -n '{"googleMapsApiKey":"AIza..."}' | base64 -w0 \
-GT_CREDENTIALS = [Convert]::ToBase64String([IO.File]::ReadAllBytes("credentials.json"))
+
+Refs: \
+https://github.com/thanhnhu/local.friends
+https://github.com/thanhnhu/GiveAndTake
 
 ### Deploy by run
 Home GitHub workflow [infra-prod-cd.yml](https://github.com/thanhnhu/infra.proxmox.k3s/blob/master/.github/workflows/infra-prod-cd.yml) or \

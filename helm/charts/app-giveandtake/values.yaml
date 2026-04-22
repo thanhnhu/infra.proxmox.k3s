@@ -1,14 +1,14 @@
 imagePullSecrets:
   - name: k3s-ghcr-pull-secret
 
-server:
+backend:
   enabled: true
   repository: ghcr.io/thanhnhu/giveandtake-be
   tag: "latest"
   containerPort: 8090
   replicaCount: 1
 
-client:
+frontend:
   enabled: true
   repository: ghcr.io/thanhnhu/giveandtake-fe
   tag: "latest"
@@ -23,19 +23,19 @@ ingress:
       paths:
         - path: /api
           pathType: ImplementationSpecific
-          backendService: server
+          backendService: backend
           backendPort: 8090
     - host: give.vfriends.info
       paths:
         - path: /docs
           pathType: ImplementationSpecific
-          backendService: server
+          backendService: backend
           backendPort: 8090
     - host: give.vfriends.info
       paths:
         - path: /
           pathType: ImplementationSpecific
-          backendService: client
+          backendService: frontend
           backendPort: 8091
 
 resources:
