@@ -34,7 +34,8 @@ spec:
             path: /health
             port: {{ .Values.backend.containerPort }}
           initialDelaySeconds: 30
-          periodSeconds: 10
+          periodSeconds: 60
+          failureThreshold: 3
         {{/*
         readinessProbe:
           httpGet:

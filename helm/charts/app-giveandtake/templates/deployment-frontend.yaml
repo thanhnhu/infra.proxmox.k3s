@@ -32,7 +32,8 @@ spec:
             path: /
             port: {{ .Values.frontend.containerPort }}
           initialDelaySeconds: 30
-          periodSeconds: 10
+          periodSeconds: 60
+          failureThreshold: 3
         {{/*
         readinessProbe:
           httpGet:
