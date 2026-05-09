@@ -61,6 +61,12 @@
         Authentication__Google__ClientId: "{{ GOOGLE_CLIENT_ID }}"
         Authentication__Google__ClientSecret: "{{ GOOGLE_CLIENT_SECRET }}"
         GOOGLE_MAPS_API_KEY: "{{ GOOGLE_MAPS_API_KEY }}"
+        Email__Enabled: "{{ LF_EMAIL_ENABLED | default('true') }}"
+        Email__Host: "{{ LF_EMAIL_HOST | default('smtp.gmail.com') }}"
+        Email__Port: "{{ LF_EMAIL_PORT | default('587') }}"
+        Email__Username: "{{ LF_EMAIL_USERNAME }}"
+        Email__Password: "{{ LF_EMAIL_PASSWORD }}"
+        Email__From: "{{ LF_EMAIL_FROM | default(LF_EMAIL_USERNAME) }}"
       data:
         # Base64 config.json from GitHub secrets
         config.json: "{{ CONFIG_JSON }}"
@@ -89,6 +95,12 @@
         CLOUDINARY_API_KEY: "{{ GT_CLOUDINARY_API_KEY }}"
         CLOUDINARY_API_SECRET: "{{ GT_CLOUDINARY_API_SECRET }}"
         RUN_MIGRATIONS: "true"
+        EMAIL_ENABLED: "{{ GT_EMAIL_ENABLED | default('true') }}"
+        EMAIL_HOST: "{{ GT_EMAIL_HOST | default('smtp.gmail.com') }}"
+        EMAIL_PORT: "{{ GT_EMAIL_PORT | default('587') }}"
+        EMAIL_USERNAME: "{{ GT_EMAIL_USERNAME }}"
+        EMAIL_PASSWORD: "{{ GT_EMAIL_PASSWORD }}"
+        EMAIL_FROM: "{{ GT_EMAIL_FROM | default(GT_EMAIL_USERNAME) }}"
   delegate_to: localhost
 
 - name: Deploy ArgoCD K3s Ingress
