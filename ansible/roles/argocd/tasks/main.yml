@@ -67,9 +67,9 @@
         Email__Username: "{{ LF_EMAIL_USERNAME }}"
         Email__Password: "{{ LF_EMAIL_PASSWORD }}"
         Email__From: "{{ LF_EMAIL_FROM | default(LF_EMAIL_USERNAME, true) }}"
-      data:
-        # Base64 config.json from GitHub secrets
-        config.json: "{{ CONFIG_JSON }}"
+        config.json: >-
+          {"googleMapsApiKey":"{{ GOOGLE_MAPS_API_KEY }}","facebookAppId":"{{ FB_APP_ID }}","googleClientId":"{{ GOOGLE_CLIENT_ID }}"}
+      data: {}
   delegate_to: localhost
 
 - name: Deploy all GiveAndTake secrets to k3s

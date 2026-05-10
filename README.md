@@ -162,7 +162,11 @@ LXC_USER = admin \
 LXC_PASSWORD = \
 K3S_SUBNET = 192.168.2.0/24 \
 CF_TUNNEL_JSON = sudo cat /etc/cloudflared/{{ tunnel_id }}.json | base64 -w 0 \
-LF_CONFIG_JSON = echo -n '{"googleMapsApiKey":"AIza..."}' | base64 -w0 \
+LF_GOOGLE_MAPS_API_KEY = AIza... \
+LF_FB_APP_ID = <facebook_app_id> \
+LF_EMAIL_USERNAME = your_email@gmail.com \
+LF_EMAIL_PASSWORD = <gmail_app_password_16chars_no_spaces> \
+# Note: config.json is built by Ansible from the above secrets \
 
 Refs: \
 https://github.com/thanhnhu/local.friends \
