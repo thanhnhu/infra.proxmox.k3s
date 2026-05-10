@@ -166,7 +166,7 @@ LF_GOOGLE_MAPS_API_KEY = AIza... \
 LF_FB_APP_ID = <facebook_app_id> \
 LF_EMAIL_USERNAME = your_email@gmail.com \
 LF_EMAIL_PASSWORD = <gmail_app_password_16chars_no_spaces>
-- Note: config.json is built by Ansible from the above secrets \
+- Note: config.json is built by Ansible from the above secrets
 
 Refs: \
 https://github.com/thanhnhu/local.friends \
