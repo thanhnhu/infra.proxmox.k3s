@@ -61,12 +61,12 @@
         Authentication__Google__ClientId: "{{ GOOGLE_CLIENT_ID }}"
         Authentication__Google__ClientSecret: "{{ GOOGLE_CLIENT_SECRET }}"
         GOOGLE_MAPS_API_KEY: "{{ GOOGLE_MAPS_API_KEY }}"
-        Email__Enabled: "{{ LF_EMAIL_ENABLED | default('true') }}"
-        Email__Host: "{{ LF_EMAIL_HOST | default('smtp.gmail.com') }}"
-        Email__Port: "{{ LF_EMAIL_PORT | default('587') }}"
+        Email__Enabled: "{{ LF_EMAIL_ENABLED | default('true', true) }}"
+        Email__Host: "{{ LF_EMAIL_HOST | default('smtp.gmail.com', true) }}"
+        Email__Port: "{{ LF_EMAIL_PORT | default('587', true) }}"
         Email__Username: "{{ LF_EMAIL_USERNAME }}"
         Email__Password: "{{ LF_EMAIL_PASSWORD }}"
-        Email__From: "{{ LF_EMAIL_FROM | default(LF_EMAIL_USERNAME) }}"
+        Email__From: "{{ LF_EMAIL_FROM | default(LF_EMAIL_USERNAME, true) }}"
       data:
         # Base64 config.json from GitHub secrets
         config.json: "{{ CONFIG_JSON }}"
