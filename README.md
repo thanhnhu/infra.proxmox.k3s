@@ -19,7 +19,33 @@ iface vmbr1 inet static
         post-down iptables -t nat -D POSTROUTING -s '192.168.2.0/24' -o vmbr0 -j MASQUERADE
 ```
 
-## 2. Setup GitHub Self-Hosted Runner in LXC (Proxmox local - depends on storage)
+## 2. Setup on Home Proxmox
+```bash
+cat <<EOF | tee /etc/sysctl.d/99-kubernetes-cri.conf
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+sysctl --system
+
+echo "overlay" >> /etc/modules
+modprobe overlay
+```
+
+```bash
+nano /etc/pve/lxc/120.conf # k3s master lxc
+```
+
+```console
+lxc.apparmor.profile: unconfined
+lxc.cgroup2.devices.allow: a
+lxc.cap.drop:
+lxc.mount.auto: proc:rw sys:rw
+lxc.mount.entry: /dev/kmsg dev/kmsg none bind,create=file
+```
+
+## 3. Setup GitHub Self-Hosted Runner in LXC (Proxmox local - depends on storage)
 ### This can use Proxmox or VM/LXC to run GitHub Runner
 
 Download Debian 13 (Trixie) LXC in Proxmox Templates or [here](http://download.proxmox.com/images/system/debian-13-standard_13.1-2_amd64.tar.zst)
@@ -54,7 +80,7 @@ pct create 200 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
 
 ### Install dependencies
 ```bash
-pct set 200 --nameserver 8.8.8.8
+pct set 200 --nameserver 8.8.8.8,1.1.1.1
 pct start 200
 pct enter 200
 
@@ -178,21 +204,46 @@ VPS GitHub workflow [infra-dev-cd.yml](https://github.com/thanhnhu/infra.proxmox
 
 All Done!
 
-### Install kubectl
+### Install kubectl on github-runner LXC
 ```bash
-# curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-# sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-# K3s includes kubectl built-in — just create a symlink
-sudo ln -sf /usr/local/bin/k3s /usr/local/bin/kubectl
-sudo k3s kubectl version --client
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+kubectl version --client
 ls -l /tmp/k3s.yaml
 export KUBECONFIG=/tmp/k3s.yaml
 echo "export KUBECONFIG=/tmp/k3s.yaml" >> ~/.bashrc
+source ~/.bashrc
+```
+
+### kubectl alias on k3s-master
+```bash
+# K3s includes kubectl built-in — just create a symlink
+sudo ln -sf /usr/local/bin/k3s /usr/local/bin/kubectl
+sudo k3s kubectl version --client
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> ~/.bashrc
+source ~/.bashrc
 # List k3s ingress
 sudo k3s kubectl get ingress -A
 ```
 
-### Check Cloudflared config
+### In case remove any lxc and re-create (k3s-master)
+```bash
+terraform state rm module.k3s_master.proxmox_virtual_environment_container.lxc
+terraform state rm module.k3s_master.null_resource.create_user
+terraform state rm module.k3s_master.null_resource.fix_apparmor
+```
+
+- Remove LXC on Proxmox
+```bash
+pct list
+pct stop 120
+pct destroy 120
+```
+
+- Rerun workflow GitHub
+
+### Check Cloudflared config on github-runner
 ```bash
 pct enter 200
 cloudflared --version
@@ -200,12 +251,12 @@ ls -la /etc/cloudflared
 cat /etc/cloudflared/config.yml
 ```
 
-## 3. Login ArgoCD Web as admin, in K3s-master
+## 4. Login ArgoCD Web as admin, in K3s-master
 ```bash
 sudo k3s kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
-## 4. Config on Semaphore (Web UI)
+## 5. Config on Semaphore (Web UI)
 1. Key Store -> Add Key \
 Type: Login with Password \
 User: root
@@ -219,7 +270,7 @@ Path: inventories/dev/hosts.yml
 Path to playbook file: playbook.yml \
 Click Run
 
-## 5. Login Grafana as admin/admin
+## 6. Login Grafana as admin/admin
 http://<GRAFANA_IP>:3000 or http://<GRAFANA_IP>:3000
 
 ### Connect Prometheus

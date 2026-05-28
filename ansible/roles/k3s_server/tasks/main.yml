@@ -5,19 +5,25 @@
   args:
     creates: /usr/local/bin/k3s
 
-- name: Fix /dev/kmsg and Restart K3s
+- name: Fix /dev/kmsg only if missing and restart K3s
   block:
-    - name: Create symlink for /dev/kmsg
+    - name: Check if /dev/kmsg exists
+      ansible.builtin.stat:
+        path: /dev/kmsg
+      register: dev_kmsg
+
+    - name: Create symlink for /dev/kmsg if missing
       ansible.builtin.file:
         src: /dev/console
         dest: /dev/kmsg
         state: link
-        force: yes
+      when: not dev_kmsg.stat.exists
 
     - name: Restart K3s service
       ansible.builtin.service:
         name: k3s
         state: restarted
+
   become: yes
 
 - name: Wait for K3s API server to be responsive
