@@ -39,10 +39,10 @@ nano /etc/pve/lxc/120.conf # k3s master lxc
 
 ```console
 lxc.apparmor.profile: unconfined
-lxc.cgroup2.devices.allow: a
+#lxc.cgroup2.devices.allow: a
 lxc.cap.drop:
-lxc.mount.auto: proc:rw sys:rw
-lxc.mount.entry: /dev/kmsg dev/kmsg none bind,create=file
+#lxc.mount.auto: proc:rw sys:rw
+#lxc.mount.entry: /dev/kmsg dev/kmsg none bind,create=file
 ```
 
 ## 3. Setup GitHub Self-Hosted Runner in LXC (Proxmox local - depends on storage)
@@ -61,7 +61,8 @@ pct create 200 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
   --net0 name=eth0,bridge=vmbr0,ip=192.168.2.200/24,gw=192.168.2.1,firewall=1 \
   --unprivileged 0 \
   --features nesting=1,fuse=1 \
-  --onboot 1
+  --onboot 1 \
+  --password admin
 ```
 
 ### Or create LXC on VPS Proxmox (Contabo)
@@ -75,7 +76,8 @@ pct create 200 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
   --net0 name=eth0,bridge=vmbr1,ip=192.168.2.200/24,gw=192.168.2.1,firewall=1 \
   --unprivileged 0 \
   --features nesting=1,fuse=1 \
-  --onboot 1
+  --onboot 1 \
+  --password admin
 ```
 
 ### Install dependencies
@@ -83,6 +85,8 @@ pct create 200 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
 pct set 200 --nameserver 8.8.8.8,1.1.1.1
 pct start 200
 pct enter 200
+
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && systemctl restart ssh
 
 apt update
 apt install -y \

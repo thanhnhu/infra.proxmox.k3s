@@ -38,7 +38,7 @@ module "database" {
   cores      = 2
   memory     = 3072
   swap       = 0 # disable swap memory
-  disk_size  = "30"
+  disk_size  = "32"
   storage    = "local"
   ip         = "192.168.2.110"
   gateway    = var.gateway
